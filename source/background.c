@@ -676,6 +676,9 @@ int background_w_fld(
 
   /** - first, define the function w(a) */
   switch (pba->fluid_equation_of_state) {
+  case topoDE:
+    *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
+    break;
   case CLP:
     *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
     break;
@@ -714,6 +717,9 @@ int background_w_fld(
   case CLP:
     *dw_over_da_fld = - pba->wa_fld;
     break;
+  case topoDE:
+    *dw_over_da_fld = - pba->wa_fld;
+    break;
   case EDE:
     d2Omega_ede_over_da2 = 0.;
     *dw_over_da_fld = - d2Omega_ede_over_da2*a/3./(1.-Omega_ede)/Omega_ede
@@ -734,6 +740,9 @@ int background_w_fld(
       a=a_ini, using for instance Romberg integration. It should be
       fast, simple, and accurate enough. */
   switch (pba->fluid_equation_of_state) {
+  case topoDE:
+    *integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(1./a) + pba->wa_fld*(a-1.));
+    break;
   case CLP:
     *integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(1./a) + pba->wa_fld*(a-1.));
     break;
