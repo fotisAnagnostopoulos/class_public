@@ -677,6 +677,7 @@ int background_w_fld(
   /** - first, define the function w(a) */
   switch (pba->fluid_equation_of_state) {
   case topoDE:
+    //STATUS: added w(a) calculation routine. NOT TESTED. TODO: The other needed 'topoDE' definitions are missing.
     #define MAX_STEPS 100000  // Maximum allowed steps
     Omega_r0 = pba->Omega0_g
     Omega_m0 = pba->Omega0_b + pba->Omega0_cdm
