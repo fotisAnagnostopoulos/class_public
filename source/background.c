@@ -677,7 +677,116 @@ int background_w_fld(
   /** - first, define the function w(a) */
   switch (pba->fluid_equation_of_state) {
   case topoDE:
-    *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
+    #define MAX_STEPS 100000  // Maximum allowed steps
+    Omega_r0 = pba->Omega0_g
+    Omega_m0 = pba->Omega0_b + pba->Omega0_cdm
+    h_cosmo =  pba->h
+
+    double Omega_DE_0 = 1.0 - Omega_m0 - Omega_r0;
+    double tol = 1e-12;
+    double a_end = 1e-8;
+    double h_init = fabs(a_end - a0)/1e5;
+    /** - needed functions - **/
+    double d_omegaDE_da(double a, double Omega_Lambda_eff, double Omega_m0, double Omega_r0, double h) 
+        {
+          // const double T_cmb = 2.7255;
+          // double Omega_r0 = Omega_m0 / (1. + 2.5e4 * Omega_m0 * pow(h, 2.0) * pow((T_cmb / 2.7), (-4.0)));
+          // double Omega_Lambda_eff = y;
+
+          double H_0 = 6.582 * h / 3.086 * 1e-42;
+          const double G = 1.0;
+
+          double denom = 4.0 * G * pow(H_0, 2.0) * (a * Omega_m0 + Omega_r0) * a + pow(a, 4.0) * (Omega_Lambda_eff - 1.0) * Omega_Lambda_eff;
+          double term0 = pow(Omega_Lambda_eff - 1.0, 2.0) * Omega_Lambda_eff;
+          double term1_0 = Omega_m0 * pow(a, 4.0) / (Omega_m0 * a + Omega_r0);
+          double term1_1 = -4.0 * G * pow(H_0, 2.0) * (3.0 * a * Omega_m0 + 4.0 * Omega_r0) / (Omega_Lambda_eff - 1.0);
+          double term1_2 = -4.0 * pow(a, 3.0) * Omega_Lambda_eff;
+
+          return term0 * (term1_0 + term1_1 + term1_2) / denom;
+        }
+
+      // RK45 (Dormand-Prince) method with adaptive step size
+      double rk45_solver(double (*func)(double, double, double, double, double), 
+                       double a0, double Omega_DE_0, double a_end, double Omega_m0, double Omega_r0, double h_cosmo, 
+                       double tol, double h_init) {
+          // Dormand-Prince RK45 coefficients
+          const double c2 = 1.0 / 5.0, c3 = 3.0 / 10.0, c4 = 4.0 / 5.0, c5 = 8.0 / 9.0, c6 = 1.0, c7 = 1.0;
+          const double a21 = 1.0 / 5.0;
+          const double a31 = 3.0 / 40.0, a32 = 9.0 / 40.0;
+          const double a41 = 44.0 / 45.0, a42 = -56.0 / 15.0, a43 = 32.0 / 9.0;
+          const double a51 = 19372.0 / 6561.0, a52 = -25360.0 / 2187.0, a53 = 64448.0 / 6561.0, a54 = -212.0 / 729.0;
+          const double a61 = 9017.0 / 3168.0, a62 = -355.0 / 33.0, a63 = 46732.0 / 5247.0, a64 = 49.0 / 176.0, a65 = -5103.0 / 18656.0;
+          const double a71 = 35.0 / 384.0, a73 = 500.0 / 1113.0, a74 = 125.0 / 192.0, a75 = -2187.0 / 6784.0, a76 = 11.0 / 84.0;
+
+          // Error estimate coefficients
+          const double b1 = 5179.0 / 57600.0, b3 = 7571.0 / 16695.0, b4 = 393.0 / 640.0, b5 = -92097.0 / 339200.0, b6 = 187.0 / 2100.0, b7 = 1.0 / 40.0;
+
+          double a = a0, y = Omega_DE_0, h = h_init;
+          int step_count = 0;
+
+          while (a > a_end && step_count < MAX_STEPS) {
+              // Compute RK45 intermediate steps
+              double k1 = h * func(a, y, Omega_m0, Omega_r0, h_cosmo);
+              double k2 = h * func(a + c2 * h, y + a21 * k1, Omega_m0, Omega_r0, h_cosmo);
+              double k3 = h * func(a + c3 * h, y + a31 * k1 + a32 * k2, Omega_m0, Omega_r0, h_cosmo);
+              double k4 = h * func(a + c4 * h, y + a41 * k1 + a42 * k2 + a43 * k3, Omega_m0, Omega_r0, h_cosmo);
+              double k5 = h * func(a + c5 * h, y + a51 * k1 + a52 * k2 + a53 * k3 + a54 * k4, Omega_m0, Omega_r0, h_cosmo);
+              double k6 = h * func(a + c6 * h, y + a61 * k1 + a62 * k2 + a63 * k3 + a64 * k4 + a65 * k5, Omega_m0, Omega_r0, h_cosmo);
+
+              // 4th-order estimate
+              double y4 = y - a71 * k1 - a73 * k3 - a74 * k4 - a75 * k5 - a76 * k6;
+              
+              // 5th-order estimate
+              double y5 = y - b1 * k1 - b3 * k3 - b4 * k4 - b5 * k5 - b6 * k6 - b7 * k6;
+              
+              // Error estimate
+              double error = fabs(y5 - y4);
+              
+              // Adaptive step size control
+              double safety_factor = 0.9;
+              if (error > tol) {
+                  h *= safety_factor * pow(tol / error, 0.25);  // Reduce step size
+                  continue;  // Retry with smaller h
+              }
+
+              // Accept step
+              a -= h;
+              y = y5;
+              step_count++;
+
+              // Increase step size if error is small
+              if (error < tol / 10) {
+                  h *= safety_factor * pow(tol / error, 0.2);
+              }
+              // Prevent overshooting
+              if (a - h < a_end) {
+                  h = a - a_end;
+              }
+          }
+
+          // fclose(file);
+          return y;
+      }
+
+      double compute_w_de(double a_end,double Omega_m0, double Omega_r0,double h_cosmo, double tol, double h_init) {
+          double a0 = 1.0;
+          // double h_cosmo = 0.7;
+          // double T_cmb = 2.7255;
+          // // double Omega_m0 = 0.3;
+          // double Omega_r0 = Omega_m0 / (1. + 2.5e4 * Omega_m0 * pow(h_cosmo, 2.0) * pow((T_cmb / 2.7), (-4.0)));
+          double Omega_DE_0 = 1.0 - Omega_m0 - Omega_r0;
+
+          double omega_de_at_a = rk45_solver(d_omegaDE_da, a0, Omega_DE_0, a_end, Omega_m0, Omega_r0, h_cosmo, tol, h_init);
+          double dOmega_da = d_omegaDE_da(a_end, omega_de_at_a, Omega_m0, Omega_r0, h_cosmo);
+          double E = pow((Omega_m0 * pow(a_end, -3.0) + Omega_r0 * pow(a_end, -4.0)) / (1.0 - omega_de_at_a), 0.5);
+          double term0 = -(3.0 * Omega_m0 * pow(a_end, -4.0) + 4.0 * Omega_r0 * pow(a_end, -5.0)) / (1.0 - omega_de_at_a);
+          double term1 = dOmega_da * ((Omega_m0 * pow(a_end, -3.0) + Omega_r0 * pow(a_end, -4.0)) / (1.0 - omega_de_at_a));
+          
+          return -1.0 - a_end / 3.0 * (1.0 / omega_de_at_a * dOmega_da + 1.0 / pow(E, 2.0) * (term0 + term1));
+      }
+
+
+    *w_fld = compute_w_de(a, Omega_m0, Omega_r0, h_cosmo, tol, h_init);
     break;
   case CLP:
     *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
@@ -741,7 +850,7 @@ int background_w_fld(
       fast, simple, and accurate enough. */
   switch (pba->fluid_equation_of_state) {
   case topoDE:
-    *integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(1./a) + pba->wa_fld*(a-1.));
+    *integral_fld = 0.0;
     break;
   case CLP:
     *integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(1./a) + pba->wa_fld*(a-1.));
