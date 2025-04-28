@@ -126,6 +126,7 @@ setup.py
 ./tools/quadrature.c
 ./tools/sparse.c
 ./tools/trigonometric_integrals.c
+./tools/trigonometric_integrals.sublime-workspace
 classy.egg-info/PKG-INFO
 classy.egg-info/SOURCES.txt
 classy.egg-info/dependency_links.txt
@@ -250,3 +251,4 @@ tools/parser.c
 tools/quadrature.c
 tools/sparse.c
 tools/trigonometric_integrals.c
+tools/trigonometric_integrals.sublime-workspace

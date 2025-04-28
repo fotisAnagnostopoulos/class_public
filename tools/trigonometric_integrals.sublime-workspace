@@ -1,0 +1,522 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"Omega0",
+				"Omega0_b"
+			],
+			[
+				"sa",
+				"samples_list"
+			],
+			[
+				"n",
+				"new_cov_BAOS"
+			],
+			[
+				"chi",
+				"chisqHz"
+			],
+			[
+				"i",
+				"inv_cov"
+			],
+			[
+				"Om",
+				"Om_m0"
+			],
+			[
+				"E",
+				"E_lcdm"
+			],
+			[
+				"data",
+				"data_Hz"
+			],
+			[
+				"inter",
+				"interp1d"
+			],
+			[
+				"f",
+				"fname"
+			],
+			[
+				"log",
+				"logz_err"
+			],
+			[
+				"res",
+				"res_tot"
+			],
+			[
+				"mak",
+				"make_random_dirs"
+			],
+			[
+				"zeds",
+				"zeds_interp"
+			],
+			[
+				"dl",
+				"dl_vals"
+			],
+			[
+				"dL",
+				"dL_test"
+			],
+			[
+				"inds_",
+				"inds_small"
+			],
+			[
+				"zed",
+				"zeds_big"
+			],
+			[
+				"z",
+				"zeds_big"
+			],
+			[
+				"lo",
+				"load_dL_interp"
+			],
+			[
+				"di",
+				"dir_angles"
+			],
+			[
+				"dir",
+				"dir_i"
+			],
+			[
+				"d",
+				"d_L_GW"
+			],
+			[
+				"le",
+				"len_z_after"
+			],
+			[
+				"zd",
+				"zeds_big"
+			],
+			[
+				"dire",
+				"direction_z"
+			],
+			[
+				"die",
+				"directions"
+			],
+			[
+				"ma",
+				"make_intrpls"
+			],
+			[
+				"del",
+				"delta_interp"
+			],
+			[
+				"in",
+				"RegularGridInterpolator"
+			],
+			[
+				"if",
+				"ifmain\tif __name__ == '__main__'"
+			],
+			[
+				"O",
+				"OMEGA_M0"
+			],
+			[
+				"l",
+				"l_ship"
+			],
+			[
+				"k",
+				"k_rep"
+			],
+			[
+				"R",
+				"R_num_max"
+			],
+			[
+				"L",
+				"L_ships"
+			],
+			[
+				"si",
+				"sigma"
+			],
+			[
+				"sig",
+				"sigma"
+			],
+			[
+				"Om_",
+				"Om_d"
+			],
+			[
+				"Um",
+				"Umax"
+			],
+			[
+				"sc",
+				"scb_f"
+			],
+			[
+				"pa",
+				"pars_test"
+			],
+			[
+				"x_",
+				"x_inds_2"
+			],
+			[
+				"Y",
+				"Y_gas"
+			],
+			[
+				"g",
+				"gchisquare"
+			],
+			[
+				"new",
+				"new_Baos_n"
+			],
+			[
+				"k_",
+				"k_2_"
+			],
+			[
+				"MA",
+				"MAX_HEIGHT"
+			],
+			[
+				"S",
+				"STEP"
+			],
+			[
+				"D",
+				"D_quot"
+			],
+			[
+				"r",
+				"r_s"
+			],
+			[
+				"y",
+				"y_arr"
+			],
+			[
+				"V_",
+				"V_th"
+			],
+			[
+				"V",
+				"V_200"
+			],
+			[
+				"pipe",
+				"pipe_to_solid"
+			],
+			[
+				"ln",
+				"lnprob_withYs"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"men",
+				"View: Toggle Menu"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/default.ini",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/README.md",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/fotis_notes.md",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/source/input.c",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/input.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/class.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/source/lensing.c",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/main/class.c",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/quadrature.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/tools/quadrature.c",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/background.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/source/background.c",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/source/thermodynamics.c",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/EFTCosmoMC/EFTCAMB/params.ini",
+		"/home/fa/Documents/randomProjects/paper-spy-mix/new_intro.txt",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/common.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/lensing.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/test/test_background.c",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/cpp/README",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/parser.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/doc/README",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/EFTCosmoMC/EFTCAMB/Makefile",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/EFTCosmoMC/EFTCAMB/readme.md",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/EFTCosmoMC/EFTCAMB/equations_ppf.f90",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/include/growTable.h",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/scripts/distances.py",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/class_public/scripts/varying_pann.py",
+		"/home/fa/Documents/CosmoProjects/cmb-codes/EFTCosmoMC/EFTCAMB/eftcamb/07p1_Pure_EFT_std.f90",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/utils.py",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/data.py",
+		"/home/fa/Documents/HelpingFriends/nick-parser/Code/JobSpy/README.md",
+		"/home/fa/Documents/HelpingFriends/nick-parser/Readme.md",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/res_1_2_2025_hrs:: 5:49 _SN+Hz-lcdm.txt",
+		"/home/fa/Documents/CosmoProjects/CC-data/CCcovariance-master/README.md",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/PantheonPlus-data/Pantheon+SH0ES.dat",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/latest-res/res_31_1_2025_hrs:: 23:6 _SN+Hz-worm.txt",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/main-lcdm.py",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/correct-results/cc-pantheon+-SHOES/wormholes/res_10_2_2025_hrs:: 22:19 _SN+Hz-worm.txt",
+		"/home/fa/Documents/foof-making.md",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/correct-results/CC--Pantheon+--SHOES--BAOs/wormholes/res_16_2_2025_hrs:: 22:3 _SN+Hz+BAOs.txt",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/correct-results/plots/cc+snia/test_plots.py",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/correct-results/plots/test_plots.py",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/newCC-addBAOs--lcdm.py",
+		"/home/fa/Documents/CosmoProjects/new-fQ-dialektopoulos/Readme.md",
+		"/home/fa/Documents/SeaQuest/bio-fouling/Docs/afroditi-supervision/Notes.md",
+		"/home/fa/Documents/pshy-in.txt",
+		"/home/fa/Documents/HelpingFriends/george-pshlos/chatgpt-test.sh",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/out.txt",
+		"/home/fa/Documents/HelpingFriends/george-pshlos/test.sh",
+		"/home/fa/Documents/randomProjects/paper-spy-mix/intro-text.txt",
+		"/home/fa/τηλεφωνα",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/all-.bib",
+		"/home/fa/weeks-food.md",
+		"/home/fa/Desktop/backpack-tobuy.txt",
+		"/home/fa/Documents/SeaQuest/bio-fouling/Utilization of granville's law--parametrize-over-observables.py",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/test/main.py",
+		"/home/fa/Documents/HelpingFriends/nick-parser/main.py",
+		"/home/fa/Documents/Assets/mini-tools/bib-scraper/main.py",
+		"/home/fa/Documents/Assets/mini-tools/bib-scraper/references.bib",
+		"/home/fa/Documents/Assets/mini-tools/Readme.md",
+		"/home/fa/.bashrc",
+		"/home/fa/.cache/.fr-meulNZ/05-COSMOLOGY/COSMOLOGY_INPUTS/README",
+		"/home/fa/Documents/CosmoProjects/runningVacuum-like-fT/Code/fQ_correct.py",
+		"/home/fa/Documents/randomProjects/blackOps/postdocs/cv-new.tex",
+		"/home/fa/Documents/CosmoProjects/runningVacuum-like-fT/Code/datasets.py",
+		"/home/fa/Documents/CosmoProjects/DarkMatter-relMond-ari/Readme.md",
+		"/home/fa/.cache/.fr-PI6PN4/05-COSMOLOGY/COSMOMC_CHAINS/README",
+		"/home/fa/Downloads/twoD_test(1).py",
+		"/home/fa/Documents/SeaQuest/Carnival/Horizon/Data/thickness-measurements/Readme.md",
+		"/home/fa/Documents/CosmoProjects/sampler_tests/README.md",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/res_21_1_2025_hrs:: 7:18 _SN+Hz-worm.txt",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/res_20_1_2025_hrs:: 18:2 _SN+Hz-worm.txt",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/main.py",
+		"/home/fa/Documents/randomProjects/Finished/taxsidi-liakos/initial-ideas.md",
+		"/home/fa/.for-victory",
+		"/home/fa/.passwords",
+		"/home/fa/Documents/SeaQuest/CFD-sims/Info-on-dirs.md",
+		"/home/fa/Documents/SeaQuest/CFD-sims/CFD-TODO.md",
+		"/home/fa/Documents/snappy-refs.md",
+		"/home/fa/Documents/Notes-hungary.md",
+		"/home/fa/Ακαντημια ο καημός",
+		"/home/fa/Desktop/paths-parnasos.txt",
+		"/home/fa/Στο τέλος της εποχης ανατέλλει",
+		"/home/fa/Documents/CosmoProjects/runningVacuum-like-fT/Code/RV-polychord.py",
+		"/home/fa/rephrasing",
+		"/home/fa/Με την αστροφεγγια στο χερι",
+		"/home/fa/Documents/climbing-stuff/Notes-mountaineering-techniques.md",
+		"/home/fa/Desktop/# Αζιμούθια και αποστάσεις",
+		"/home/fa/Desktop/καταφυγιο-γεροντοβραχος-αηλιας",
+		"/home/fa/Documents/CosmoProjects/paper-reviews/mathematics-3415226/review1.txt",
+		"/home/fa/Documents/SeaQuest/Carnival/Readme.md",
+		"/home/fa/Documents/SeaQuest/tania-tzima/Docs/Readme.md",
+		"/home/fa/Documents/CosmoProjects/Readme.md",
+		"/home/fa/Documents/CosmoProjects/runningVacuum-like-fT/Code/utils.py",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/README.md",
+		"/home/fa/Documents/randomProjects/dimokritos-aithsh/Comments.md",
+		"/home/fa/Documents/TODO-GENERAL.md",
+		"/home/fa/Downloads/19-288-MAR-PID-9R11-R01.dxf",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/fittings/test.py",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/constant/cloudProperties",
+		"/home/fa/Documents/CosmoProjects/pinns-fQ/data.py",
+		"/home/fa/Documents/CosmoProjects/stelios-Wormholes-evap/wormhole_de_evolution/data.py",
+		"/home/fa/Documents/CosmoProjects/paper-reviews/EPJC-24-08-053/review1.txt",
+		"/home/fa/Documents/CosmoProjects/asymptotical-safety-cosmology/main.py",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/elapsed_time.py",
+		"/home/fa/Documents/CosmoProjects/asymptotical-safety-cosmology/test_2.py",
+		"/home/fa/Documents/SeaQuest/blender-script.py",
+		"/home/fa/Documents/CosmoProjects/asymptotical-safety-cosmology/AS-scalingI-working/Asymptotically-Safe-Cosmo-fittings/data.py",
+		"/home/fa/Documents/SeaQuest/tania-tzima/Readme.md",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/system/controlDict",
+		"/home/fa/Documents/SeaQuest/CFD-sims/paper/meshing_pipeline.md",
+		"/home/fa/Documents/randomProjects/comms-safety/Readme.md",
+		"/home/fa/Documents/CosmoProjects/To-Read/Readme.md",
+		"/home/fa/.cache/.fr-sUWetE/Background_evolution.py",
+		"/home/fa/Documents/randomProjects/JaxPM/README.md",
+		"/home/fa/Documents/randomProjects/trails-patra.md",
+		"/home/fa/Documents/randomProjects/playoin-writing/Readme.md",
+		"/home/fa/Documents/randomProjects/playoin-writing/Readme.txt",
+		"/home/fa/Documents/SeaQuest/CFD-sims/scale-down/system/blockMeshDict",
+		"/home/fa/.cache/.fr-8Sdvve/metric_depth_cp/train_usod.py",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/0/nut",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/0/T",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/0/U",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/system/fvSchemes",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/constant/fvModels",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/constant/thermo.compressibleGas",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/constant/kinematicCloudProperties",
+		"/home/fa/Documents/SeaQuest/CFD-sims/cfd-cases-erosion-corrosion/stavros-version-11/constant/liquidMixtureProperties"
+	],
+	"find":
+	{
+		"height": 65.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"scrollbar_highlights": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"use_gitignore": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 53.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "trigonometric_integrals.sublime-project",
+	"replace":
+	{
+		"height": 102.0
+	},
+	"save_all_on_build": false,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": false,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
