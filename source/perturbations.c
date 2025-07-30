@@ -9368,7 +9368,9 @@ int perturbations_derivs(double tau,
         w_prime_fld = dw_over_da_fld * a_prime_over_a * a;
 
         ca2 = w_fld - w_prime_fld / 3. / (1.+w_fld) / a_prime_over_a;
-        cs2 = pba->cs2_fld;
+        // TODO:Check this shiit
+        // cs2 = pba->cs2_fld;
+        cs2 = ca2;
 
         /** - ----> fluid density */
 

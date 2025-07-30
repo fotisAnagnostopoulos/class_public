@@ -470,7 +470,10 @@
 	"menu_visible": true,
 	"output.find_results":
 	{
-		"height": 0.0
+		"height": 0.0,
+		"history":
+		[
+		]
 	},
 	"pinned_build_system": "",
 	"project": "trigonometric_integrals.sublime-project",
