@@ -3300,8 +3300,8 @@ int input_read_parameters_species(struct file_content * pfc,
     if (pba->fluid_equation_of_state == topoDE) {
       /** 8.a.2.2) Equation of state of the fluid in 'CLP' case */
       /* Read */
-      // class_read_double("w0_fld",pba->w0_fld);
-      // class_read_double("wa_fld",pba->wa_fld);
+      class_read_double("w0_fld",pba->w0_fld);
+      class_read_double("wa_fld",pba->wa_fld);
 
       class_read_double("cs2_fld",pba->cs2_fld);
 

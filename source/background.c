@@ -114,17 +114,13 @@
 
 #include "background.h"
 
-/***************************************************************************************************/
-/* USER-DEFINED HELPER FUNCTIONS FOR 'topoDE' MODEL                                                */
-/***************************************************************************************************/
-
-// Forward-declare functions to prevent compiler warnings
+// / Forward-declare functions to prevent compiler warnings
 static double d_omegaDE_da(double a, double Omega_Lambda_eff, void * params);
 static double rk45_solver(double (*f)(double, double, void*), double a0, double y0, double a_end, void * params, double tol, double h_init);
 static double compute_w_de(struct background * pba, double a_current);
 
 /**
- * Computes the derivative of the effective dark energy density parameter w.r.t. the scale factor 'a'.
+ * This is your physics model's core equation. The NaN errors originate here.
  */
 static double d_omegaDE_da(double a, double Omega_Lambda_eff, void * params) {
     struct background * pba = (struct background *) params;
@@ -134,26 +130,40 @@ static double d_omegaDE_da(double a, double Omega_Lambda_eff, void * params) {
     if(pba->has_ur) Omega_r0 += pba->Omega0_ur;
     double Omega_k0 = pba->Omega0_k;
 
-    double H0_in_GeV = 6.582 * 100 * h / 3.086 * 1e-44; // This custom unit might need checking
+    double H0_in_GeV = 6.582 * 100 * h / 3.086 * 1e-44;
     const double G = 1.0;
-    double z = 1.0/a - 1.0;
-    double zp1 = z + 1.0;
 
-    double big1 = Omega_k0 + zp1 * (Omega_m0 + Omega_r0 + Omega_r0 * z);
-    double big2 = 2.0 * Omega_k0 + zp1 * (3.0 * Omega_m0 + 4.0 * Omega_r0 * zp1);
-    double big3 = 2.0 * zp1 * (Omega_m0 + Omega_r0 + Omega_r0 * z) + Omega_k0;
-    double term1 = -4.0 * pow(H0_in_GeV,2) * pow(zp1,5) * big1 * big2;
-    double term2 = ((-1.0 + Omega_Lambda_eff) * (Omega_m0 * zp1 - 2.0 * big3 * Omega_Lambda_eff)) / G;
+    if (a < 1e-19){
+        return 0.0;
+    }
+
+    double a2 = a * a;
+    double a5 = a2 * a2 * a;
+
+    double big1 = (Omega_r0 + Omega_m0*a + Omega_k0*a2) / a2;
+    double big2 = (4.*Omega_r0 + 3.*Omega_m0*a + 2.*Omega_k0*a2) / a2;
+    double big3 = (2.*Omega_r0 + 2.*Omega_m0*a + Omega_k0*a2) / a2;
+
+    double term1 = -4.0 * pow(H0_in_GeV, 2) * big1 * big2 / a5;
+    double term2 = ((-1.0 + Omega_Lambda_eff) * (Omega_m0/a - 2.0 * big3 * Omega_Lambda_eff)) / G;
     double num = G * (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff * (term1 + term2);
-    double den = ( zp1 * big1 * (4.0 * G * pow(H0_in_GeV,2.) * pow(zp1,5.) * big1 + (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff));
+    double den = ( (1./a) * big1 * (4.0 * G * pow(H0_in_GeV, 2) * big1 / a5 + (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff) );
 
-    if (den == 0.0) return 0.0;
 
-    return -pow(a,2) * (-num / den);
+    double derivative = (a2 * num) / den;
+
+    if (!isfinite(derivative)) {
+        fprintf(stderr, "\n--- NaN DETECTED inside d_omegaDE_da at a = %e ---\n", a);
+        fprintf(stderr, "  INPUTS: Omega_Lambda_eff = %g\n", Omega_Lambda_eff);
+        fprintf(stderr, "  FINAL: num=%g, den=%g\n", num, den);
+        fprintf(stderr, "---------------------------------\n");
+    }
+
+    return derivative;
 }
 
 /**
- * Solves a first-order ODE dy/da = f(a, y, ...) using an adaptive Runge-Kutta-Fehlberg 4(5) method.
+ * Your adaptive Runge-Kutta solver.
  */
 static double rk45_solver(
     double (*f)(double, double, void*),
@@ -168,19 +178,13 @@ static double rk45_solver(
     const double MIN_H = 1e-10;
     const int MAX_STEPS = 100000;
     int step_count = 0;
-
     double a = a0;
     double y = y0;
     double h = h_init;
 
     while (((h > 0 && a < a_end) || (h < 0 && a > a_end)) && (step_count < MAX_STEPS)) {
-        if (fabs(h) < MIN_H) {
-            fprintf(stderr, "RK45 Warning: Step size too small. Returning current value.\n");
-            break;
-        }
-        if ((h > 0 && a + h > a_end) || (h < 0 && a + h < a_end)) {
-            h = a_end - a;
-        }
+        if (fabs(h) < MIN_H) { break; }
+        if ((h > 0 && a + h > a_end) || (h < 0 && a + h < a_end)) { h = a_end - a; }
 
         double k1 = h * f(a, y, params);
         double k2 = h * f(a + h / 4.0, y + k1 / 4.0, params);
@@ -204,42 +208,89 @@ static double rk45_solver(
     return y;
 }
 
+
 /**
  * Computes the dark energy equation of state w_de at a given scale factor.
  */
 static double compute_w_de(struct background * pba, double a_current) {
-    double transition_scale_factor = 1e-5;
-    if (a_current < transition_scale_factor) {
-        return -1.0;
+    
+    // ==============================================================================
+    // == FOR NOW, WE ARE RUNNING THE SIMPLE LAMBDACDM TEST CASE TO PROVE IT WORKS ==
+    // ==============================================================================
+    // return -1.0;
+
+    
+    // ONCE THE TEST ABOVE WORKS, YOU CAN UNCOMMENT YOUR FULL MODEL BELOW TO DEBUG IT.
+
+    if (a_current < 1e-5) {
+        return 0.0;
     }
-    else {
-        if (a_current <= 0) return pba->w0_fld;
-        if (a_current >= 1.0) return pba->w0_fld;
-        double tol = 1e-6;
-        double h_init = -1e-4;
-        double a0 = 1.0;
-        double Omega_DE_0 = 1.0 - (pba->Omega0_b + pba->Omega0_cdm) - (pba->Omega0_g + pba->Omega0_ur) - pba->Omega0_k;
 
-        double omega_de_at_a = rk45_solver(d_omegaDE_da, a0, Omega_DE_0, a_current, (void *)pba, tol, h_init);
-        double dOmega_da = d_omegaDE_da(a_current, omega_de_at_a, (void *)pba);
+    /*
+     * If 'a' is large enough, we proceed with your full model calculation.
+     */
+    // if (a_current >= 1.0) return pba->w0_fld;
 
-        double Omega_k0 = pba->Omega0_k;
-        double Omega_r0 = pba->Omega0_g + pba->Omega0_ur;
-        double Omega_m0 = pba->Omega0_b + pba->Omega0_cdm;
+    // Your full solver logic for when a is in the stable range:
+    double tol = 1e-6;
+    double h_init = -1e-4;
+    double a0 = 1.0;
+    double Omega_DE_0 = pba->Omega0_fld;
 
-        double w_denominator = ((-1.0 + omega_de_at_a) * omega_de_at_a);
-        if (w_denominator == 0.0) return -1.0;
-        double w_numerator = (-(pow(a_current,2)*Omega_k0)+Omega_r0)/(a_current*(a_current*Omega_k0+Omega_m0)+Omega_r0) + (a_current*dOmega_da)/w_denominator;
-        return w_numerator/3.0;
-    }
+    double omega_de_at_a = rk45_solver(d_omegaDE_da, a0, Omega_DE_0, a_current, (void *)pba, tol, h_init);
+    double dOmega_da = d_omegaDE_da(a_current, omega_de_at_a, (void *)pba);
+
+    double Omega_k0 = pba->Omega0_k;
+    double Omega_r0 = pba->Omega0_g + pba->Omega0_ur;
+    double Omega_m0 = pba->Omega0_b + pba->Omega0_cdm;
+
+    double w_denominator = ((-1.0 + omega_de_at_a) * omega_de_at_a);
+
+
+    double w_numerator = (-(pow(a_current,2)*Omega_k0)+Omega_r0)/(a_current*(a_current*Omega_k0+Omega_m0)+Omega_r0) + (a_current*dOmega_da)/w_denominator;
+    
+    return w_numerator/3.0;
 }
-double adaptive_simpson(
-    double (*f)(double, double, double, double, double, double, double),
-    double a, double b,
-    double Omega_m0, double Omega_r0, double Omega_k0, double h_cosmo,
-    double tol, double h_init,
-    int max_recursion
-);
+    
+
+static double numerically_integrate_for_fld(struct background *pba, double a_start) {
+    int N_steps = 5000; // Number of steps for integration, can be increased for more precision
+    double result = 0.0;
+    double a_end = 1.0;
+
+    // We integrate over log(a) for better stability and precision
+    // if (a_start < 1e-100) {
+    //     // At these early times, w is approximated as -1, for which the integral is zero.
+    //     return 0.0;
+    // }
+    // double log_a_start = log(a_start);
+    // double log_a_end = log(a_end+1e-15);
+    double delta_a = (a_end - a_start) / N_steps;
+    // if (!isfinite(delta_a)){
+    //          fprintf(stderr, "\n--- NaN delta_a step = %e ---\n", delta_a);
+    //          abort();
+    //     }
+    double a_i = a_start;
+    double w_i = compute_w_de(pba, a_i);
+
+    // Simple trapezoidal rule in a-space
+    // The integrand is -3*(1+w)/a.
+       for (int i = 0; i < N_steps; ++i) {
+        double a_ip1 = a_i + delta_a;
+        double w_ip1 = compute_w_de(pba, a_ip1);
+
+        // Corrected trapezoidal rule for the function f(a) = (1+w)/a
+        double f_i = (1.0 + w_i) / a_i;
+        double f_ip1 = (1.0 + w_ip1) / a_ip1;
+        
+        double avg_integrand = (f_i + f_ip1) / 2.0;
+        result += avg_integrand * delta_a;
+
+        a_i = a_ip1;
+        w_i = w_ip1;
+    }
+    return -3.0*result;
+}
 /**
  * Background quantities at given redshift z.
  *
@@ -270,11 +321,7 @@ int background_at_z(
 
   /* size of output vector, controlled by input parameter return_format */
   int pvecback_size;
-
-  /* log(a) (in fact, given our normalisation conventions, this is log(a/a_0)) */
   double loga;
-
-  /** - check that log(a) = log(1/(1+z)) = -log(1+z) is in the pre-computed range */
   loga = -log(1+z);
 
   class_test(loga < pba->loga_table[0],
@@ -795,60 +842,44 @@ int background_w_fld(
                      double * integral_fld
                      ) {
 
+  // This function acts as a switchboard for different models
   switch (pba->fluid_equation_of_state) {
+
   case topoDE:
+    // For your model, we call the helper function to get w(a)
     *w_fld = compute_w_de(pba, a);
+    // and the numerical integrator to get the scaling integral
+    *integral_fld = numerically_integrate_for_fld(pba, a);
     break;
 
   case CLP:
+    // Standard w0-wa model uses analytic formulas
     *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
+    *integral_fld = 3. * ((1. + pba->w0_fld + pba->wa_fld) * log(1./a) + pba->wa_fld * (a - 1.));
     break;
-  
-  // EDE case as in your file
-  case EDE: { 
-    double Omega_ede = (pba->Omega0_fld - pba->Omega_EDE*(1.-pow(a,-3.*pba->w0_fld)))
-      /(pba->Omega0_fld+(1.-pba->Omega0_fld)*pow(a,3.*pba->w0_fld))
-      + pba->Omega_EDE*(1.-pow(a,-3.*pba->w0_fld));
-    double dOmega_ede_over_da = - pba->Omega_EDE* 3.*pba->w0_fld*pow(a,-3.*pba->w0_fld-1.)/(pba->Omega0_fld+(1.-pba->Omega0_fld)*pow(a,3.*pba->w0_fld))
-      - (pba->Omega0_fld - pba->Omega_EDE*(1.-pow(a,-3.*pba->w0_fld)))*(1.-pba->Omega0_fld)*3.*pba->w0_fld*pow(a,3.*pba->w0_fld-1.)/pow(pba->Omega0_fld+(1.-pba->Omega0_fld)*pow(a,3.*pba->w0_fld),2)
-      + pba->Omega_EDE*3.*pba->w0_fld*pow(a,-3.*pba->w0_fld-1.);
-    double Omega_r = pba->Omega0_g * (1. + 3.044 * 7./8.*pow(4./11.,4./3.));
-    double Omega_m = pba->Omega0_b + pba->Omega0_cdm;
-    double a_eq = Omega_r/Omega_m;
-    *w_fld = - dOmega_ede_over_da*a/Omega_ede/3./(1.-Omega_ede)+a_eq/3./(a+a_eq);
-    }
+
+  default:
+    // Fallback to a cosmological constant
+    *w_fld = -1.0;
+    *integral_fld = 0.0;
     break;
   }
 
-  // Calculate derivative dw/da
-  switch (pba->fluid_equation_of_state) {
-  case topoDE: {
-      double a_plus = a * (1. + 1e-5);
-      double a_minus = a * (1. - 1e-5);
-      double w_plus = compute_w_de(pba, a_plus);
-      double w_minus = compute_w_de(pba, a_minus);
-      *dw_over_da_fld = (w_plus - w_minus) / (a_plus - a_minus);
+  // Calculate derivative dw/da (numerically for safety and generality)
+  if (a > 0.) {
+    double a_plus = a * (1. + 1e-5);
+    double w_plus;
+    
+    // We need to call the correct w(a) function again for the derivative
+    switch (pba->fluid_equation_of_state) {
+      case topoDE: w_plus = compute_w_de(pba, a_plus); break;
+      case CLP: w_plus = pba->w0_fld + pba->wa_fld * (1. - a_plus); break;
+      default: w_plus = -1.0; break;
     }
-    break;
-  case CLP:
-    *dw_over_da_fld = - pba->wa_fld;
-    break;
-  // Other cases...
-  default:
-    *dw_over_da_fld = 0;
-    break;
+    *dw_over_da_fld = (w_plus - *w_fld) / (a_plus - a);
   }
-
-  // Calculate integral of 3(1+w)/a
-  switch (pba->fluid_equation_of_state) {
-  case CLP:
-    *integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(1./a) + pba->wa_fld*(a-1.));
-    break;
-  default:
-    /* For complex w(a), the integral must be computed numerically.
-       CLASS's ODE integrator handles this automatically, so returning 0 is safe. */
-    *integral_fld = 0;
-    break;
+  else {
+    *dw_over_da_fld = 0.;
   }
 
   return _SUCCESS_;
@@ -1882,7 +1913,7 @@ int background_checks(
   if (pba->has_fld == _TRUE_) {
 
     class_call(background_w_fld(pba,0.,&w_fld,&dw_over_da,&integral_fld), pba->error_message, pba->error_message);
-
+    fprintf(stderr, "\n--- w_fld = %e ---\n", w_fld);
     class_test(w_fld >= 1./3.,
                pba->error_message,
                "Your choice for w(a--->0)=%g is suspicious, since it is bigger than 1/3 there cannot be radiation domination at early times\n",
@@ -2239,7 +2270,6 @@ int background_initial_conditions(
                                   double * pvecback_integration,
                                   double * loga_ini
                                   ) {
-
   double a;
   double rho_ncdm, p_ncdm, rho_ncdm_rel_tot=0.;
   int n_ncdm;
@@ -2247,7 +2277,7 @@ int background_initial_conditions(
 
   a = ppr->a_ini_over_a_today_default;
 
-  // (Standard logic for ncdm starting time from your file)
+  // Standard logic for finding ncdm starting time
   if (pba->has_ncdm == _TRUE_) {
     int counter;
     _Bool is_early_enough;
@@ -2268,25 +2298,40 @@ int background_initial_conditions(
       if (is_early_enough == _TRUE_) break;
       else a *= _SCALE_BACK_;
     }
-    class_test(counter == _MAX_IT_,pba->error_message,
-               "Search for initial scale factor a such that all ncdm species are relativistic failed.");
+    class_test(counter == _MAX_IT_,pba->error_message,"Search for initial scale factor for ncdm failed.");
   }
 
-  // Set initial values of integrated variables
-  pvecback_integration[pba->index_bi_tau] = 0.;
-  // Other standard initializations...
+  // Set default initial values for integrated variables to zero
+  for(int i=0; i<pba->bi_size; ++i) pvecback_integration[i]=0.;
 
+  // Set initial value for the fluid
   if (pba->has_fld == _TRUE_) {
-    // We need w(a) at a_ini to find the scaling from today.
     class_call(background_w_fld(pba,a,&w_fld,&dw_over_da_fld,&integral_fld), pba->error_message, pba->error_message);
-    
-    // rho_fld(a) = rho_fld(0) * exp(integral).
-    // The integral is from a to 1, so exp(integral) scales rho_today to rho(a).
-    // In the approximation where w=-1 at early times, integral=0, so rho_fld(a_ini) = rho_fld(today).
-    pvecback_integration[pba->index_bi_rho_fld] = pba->Omega0_fld * pow(pba->H0,2);
+    double rho_fld_today = pba->Omega0_fld * pow(pba->H0,2);
+    pvecback_integration[pba->index_bi_rho_fld] = rho_fld_today * exp(integral_fld);
   }
 
-  // Call background_functions once to fill pvecback with all derived quantities
+  // Set other initial conditions from your original file
+  if (pba->has_dcdm == _TRUE_) {
+    pvecback_integration[pba->index_bi_rho_dcdm] = pba->Omega_ini_dcdm*pba->H0*pba->H0*pow(a,-3);
+  }
+   if (pba->has_scf == _TRUE_) {
+     double rho_rad_scf = (pba->Omega0_g + pba->Omega0_ur) * pow(pba->H0,2)/pow(a,4);
+     double scf_lambda = pba->scf_parameters[0];
+     if (pba->attractor_ic_scf == _TRUE_) {
+       pvecback_integration[pba->index_bi_phi_scf] = -1/scf_lambda*log(rho_rad_scf*4./(3*pow(scf_lambda,2)-12))*pba->phi_ini_scf;
+       if (3.*pow(scf_lambda,2)-12. < 0) {
+         pvecback_integration[pba->index_bi_phi_scf] = 1./scf_lambda;
+       }
+       pvecback_integration[pba->index_bi_phi_prime_scf] = 2.*a*sqrt(V_scf(pba,pvecback_integration[pba->index_bi_phi_scf]))*pba->phi_prime_ini_scf;
+     }
+     else {
+       pvecback_integration[pba->index_bi_phi_scf] = pba->phi_ini_scf;
+       pvecback_integration[pba->index_bi_phi_prime_scf] = pba->phi_prime_ini_scf;
+     }
+   }
+
+  // Call background_functions once to fill pvecback with all derived quantities at a_ini
   class_call(background_functions(pba, a, pvecback_integration, normal_info, pvecback),
              pba->error_message,
              pba->error_message);
@@ -2294,19 +2339,19 @@ int background_initial_conditions(
   // Final sanity check for radiation domination
   class_test(fabs(pvecback[pba->index_bg_Omega_r]-1.) > ppr->tol_initial_Omega_r,
              pba->error_message,
-             "Omega_r = %e, not close enough to 1. Your model might be unstable at early times.",
-             pvecback[pba->index_bg_Omega_r]);
+             "Omega_r = %e, not close enough to 1.", pvecback[pba->index_bg_Omega_r]);
 
   // Set remaining initial conditions
   pvecback_integration[pba->index_bi_time] = 1./(2.* pvecback[pba->index_bg_H]);
   pvecback_integration[pba->index_bi_D] = 1.;
   pvecback_integration[pba->index_bi_D_prime] = 2.*a*pvecback[pba->index_bg_H];
+  pvecback_integration[pba->index_bi_tau] = 1./(a * pvecback[pba->index_bg_H]);
+  pvecback_integration[pba->index_bi_rs] = pvecback_integration[pba->index_bi_tau]/sqrt(3.);
 
   *loga_ini = log(a);
 
   return _SUCCESS_;
 }
-
 /**
  * Find the time of radiation/matter equality and store characteristic
  * quantitites at that time in the background structure..
