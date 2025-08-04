@@ -3279,8 +3279,11 @@ int input_read_parameters_species(struct file_content * pfc,
       else if ((strstr(string1,"EDE") != NULL) || (strstr(string1,"ede") != NULL)) {
         pba->fluid_equation_of_state = EDE;
       }
-      else if ((strstr(string1,"topoDE") != NULL) ) {
+      else if ((strstr(string1,"topoDE") != NULL) || (strstr(string1,"topoDE") != NULL)) {
         pba->fluid_equation_of_state = topoDE;
+      }
+      else if ((strstr(string1,"worldGB") != NULL) || (strstr(string1,"worldGB") != NULL)) {
+        pba->fluid_equation_of_state = worldGB;
       }
       else {
         class_stop(errmsg,"incomprehensible input '%s' for the field 'fluid_equation_of_state'",string1);
@@ -3294,19 +3297,30 @@ int input_read_parameters_species(struct file_content * pfc,
       class_read_double("wa_fld",pba->wa_fld);
       class_read_double("cs2_fld",pba->cs2_fld);
     }
+    if (pba->fluid_equation_of_state == topoDE) {
+      /** 8.a.2.2) Equation of state of the fluid in 'CLP' case */
+      /* Read */
+      // class_read_double("w0_fld",pba->w0_fld);
+      // class_read_double("wa_fld",pba->wa_fld);
+
+      // class_read_double("cs2_fld",pba->cs2_fld);
+
+
+    // ... your other custom parameter reading for topoDE can go here ...
+    }
+    if (pba->fluid_equation_of_state == worldGB) {
+      /** 8.a.2.2) Equation of state of the fluid in 'worldGB' case */
+      /* Read */
+      class_read_double("aC",pba->aC);
+      // class_read_double("wa_fld",pba->wa_fld);
+      // class_read_double("cs2_fld",pba->cs2_fld);
+    }
     if (pba->fluid_equation_of_state == EDE) {
       /** 8.a.2.3) Equation of state of the fluid in 'EDE' case */
       /* Read */
       class_read_double("w0_fld",pba->w0_fld);
       class_read_double("Omega_EDE",pba->Omega_EDE);
       class_read_double("cs2_fld",pba->cs2_fld);
-    }
-     if (pba->fluid_equation_of_state == topoDE) {
-      /** 8.a.2.3) Equation of state of the fluid in 'EDE' case */
-      /* Read */
-      // class_read_double("w0_fld",pba->w0_fld);
-      // class_read_double("Omega_EDE",pba->Omega_EDE);
-      // class_read_double("cs2_fld",pba->cs2_fld);
     }
   }
 
@@ -5906,9 +5920,10 @@ int input_default_params(struct background *pba,
   pba->use_ppf = _TRUE_;
   pba->c_gamma_over_c_fld = 0.4;
   /** 9.a.2) Equation of state */
-  pba->fluid_equation_of_state = CLP;
+  // pba->fluid_equation_of_state = CLP;
   pba->w0_fld = -1.;
   pba->cs2_fld = 1.;
+
   /** 9.a.2.1) 'CLP' case */
   pba->wa_fld = 0.;
   /** 9.a.2.2) 'EDE' case */

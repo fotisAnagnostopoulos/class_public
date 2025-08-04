@@ -113,10 +113,12 @@
  */
 
 #include "background.h"
-// Forward-declare functions to prevent compiler warnings
+
+// / Forward-declare functions to prevent compiler warnings
 static double d_omegaDE_da(double a, double Omega_Lambda_eff, void * params);
 static double rk45_solver(double (*f)(double, double, void*), double a0, double y0, double a_end, void * params, double tol, double h_init);
 static double compute_w_de(struct background * pba, double a_current);
+// CORRECT line to replace it with
 static double adaptive_simpson_recursive(struct background *pba, double a, double b, double epsilon, double whole, int recursion_depth);
 
 /**
@@ -150,7 +152,7 @@ static double adaptive_simpson_recursive(struct background *pba, double a, doubl
     
     /* ==> ADD THIS CHECK AT THE TOP <== */
     // Hard limit to prevent excessive recursion and slowness.
-    int max_recursion_depth = 10;
+    int max_recursion_depth = 20;
     if (recursion_depth >= max_recursion_depth) {
         // Stop recursing and return the best estimate so far.
         return whole;
@@ -182,35 +184,33 @@ static double d_omegaDE_da(double a, double Omega_Lambda_eff, void * params) {
     double H0_in_GeV = 6.582 * 100 * h / 3.086 * 1e-44;
     const double G = 1.0;
 
-    if (a < 1e-4){
+    if (a < 1e-3){
         return 0.0;
     }
-    double H0 = H0_in_GeV;
-    // double a2 = a * a;
-    // double a5 = a2 * a2 * a;
 
-    // double big1 = (Omega_r0 + Omega_m0*a + Omega_k0*a2) / a2;
-    // double big2 = (4.*Omega_r0 + 3.*Omega_m0*a + 2.*Omega_k0*a2) / a2;
-    // double big3 = (2.*Omega_r0 + 2.*Omega_m0*a + Omega_k0*a2) / a2;
+    double a2 = a * a;
+    double a5 = a2 * a2 * a;
 
-    // double term1 = -4.0 * pow(H0_in_GeV, 2) * big1 * big2 / a5;
-    // double term2 = ((-1.0 + Omega_Lambda_eff) * (Omega_m0/a - 2.0 * big3 * Omega_Lambda_eff)) / G;
-    // double num = G * (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff * (term1 + term2);
-    // double den = ( (1./a) * big1 * (4.0 * G * pow(H0_in_GeV, 2) * big1 / a5 + (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff) );
+    double big1 = (Omega_r0 + Omega_m0*a + Omega_k0*a2) / a2;
+    double big2 = (4.*Omega_r0 + 3.*Omega_m0*a + 2.*Omega_k0*a2) / a2;
+    double big3 = (2.*Omega_r0 + 2.*Omega_m0*a + Omega_k0*a2) / a2;
+
+    double term1 = -4.0 * pow(H0_in_GeV, 2) * big1 * big2 / a5;
+    double term2 = ((-1.0 + Omega_Lambda_eff) * (Omega_m0/a - 2.0 * big3 * Omega_Lambda_eff)) / G;
+    double num = G * (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff * (term1 + term2);
+    double den = ( (1./a) * big1 * (4.0 * G * pow(H0_in_GeV, 2) * big1 / a5 + (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff) );
 
 
-    // double derivative = (a2 * num) / den;
+    double derivative = (a2 * num) / den;
 
-    // if (!isfinite(derivative)) {
-    //     fprintf(stderr, "\n--- NaN DETECTED inside d_omegaDE_da at a = %e ---\n", a);
-    //     fprintf(stderr, "  INPUTS: Omega_Lambda_eff = %g\n", Omega_Lambda_eff);
-    //     fprintf(stderr, "  FINAL: num=%g, den=%g\n", num, den);
-    //     fprintf(stderr, "---------------------------------\n");
-    // }
+    if (!isfinite(derivative)) {
+        fprintf(stderr, "\n--- NaN DETECTED inside d_omegaDE_da at a = %e ---\n", a);
+        fprintf(stderr, "  INPUTS: Omega_Lambda_eff = %g\n", Omega_Lambda_eff);
+        fprintf(stderr, "  FINAL: num=%g, den=%g\n", num, den);
+        fprintf(stderr, "---------------------------------\n");
+    }
 
-    // return derivative;
-    return (G*pow(-1+Omega_Lambda_eff,2)*Omega_Lambda_eff*((-4*pow(H0,2)*(2*pow(a,2)*Omega_k0+3*a*Omega_m0+4*Omega_r0))/(-1+Omega_Lambda_eff)+(pow(a,7)*(a*Omega_m0-2*(pow(a,2)*Omega_k0+2*a*Omega_m0+2*Omega_r0)*Omega_Lambda_eff))/(G*(a*(a*Omega_k0+Omega_m0)+Omega_r0))))/(4*a*G*pow(H0,2)*(a*(a*Omega_k0+Omega_m0)+Omega_r0)+pow(a,8)*(-1+Omega_Lambda_eff)*Omega_Lambda_eff);
-
+    return derivative;
 }
 
 /**
@@ -265,6 +265,9 @@ static double rk45_solver(
  */
 static double compute_w_de(struct background * pba, double a_current) {
     
+    // ==============================================================================
+    // == FOR NOW, WE ARE RUNNING THE SIMPLE LAMBDACDM TEST CASE TO PROVE IT WORKS ==
+    // ==============================================================================
     // return -1.0;
 
     
@@ -274,8 +277,14 @@ static double compute_w_de(struct background * pba, double a_current) {
         return -0.00000001;
     }
 
+    /*
+     * If 'a' is large enough, we proceed with your full model calculation.
+     */
+    // if (a_current >= 1.0) return pba->w0_fld;
+
+    // Your full solver logic for when a is in the stable range:
     double tol = 1e-6;
-    double h_init = -1e-5;
+    double h_init = -1e-4;
     double a0 = 1.0;
     double Omega_DE_0 = pba->Omega0_fld;
 
@@ -306,6 +315,44 @@ static double numerically_integrate_for_fld(struct background *pba, double a_sta
     double whole = simpson_step(pba, a_start, a_end);
     return adaptive_simpson_recursive(pba, a_start, a_end, epsilon, whole, 0);
 }
+// static double numerically_integrate_for_fld(struct background *pba, double a_start) {
+//     int N_steps = 5000; // Number of steps for integration, can be increased for more precision
+//     double result = 0.0;
+//     double a_end = 1.0;
+//     return 0;
+//     // We integrate over log(a) for better stability and precision
+//     // if (a_start < 1e-100) {
+//     //     // At these early times, w is approximated as -1, for which the integral is zero.
+//     //     return 0.0;
+//     // }
+//     // double log_a_start = log(a_start);
+//     // double log_a_end = log(a_end+1e-15);
+//     double delta_a = (a_end - a_start) / N_steps;
+//     // if (!isfinite(delta_a)){
+//     //          fprintf(stderr, "\n--- NaN delta_a step = %e ---\n", delta_a);
+//     //          abort();
+//     //     }
+//     double a_i = a_start;
+//     double w_i = compute_w_de(pba, a_i);
+
+//     // Simple trapezoidal rule in a-space
+//     // The integrand is -3*(1+w)/a.
+//        for (int i = 0; i < N_steps; ++i) {
+//         double a_ip1 = a_i + delta_a;
+//         double w_ip1 = compute_w_de(pba, a_ip1);
+
+//         // Corrected trapezoidal rule for the function f(a) = (1+w)/a
+//         double f_i = (1.0 + w_i) / a_i;
+//         double f_ip1 = (1.0 + w_ip1) / a_ip1;
+        
+//         double avg_integrand = (f_i + f_ip1) / 2.0;
+//         result += avg_integrand * delta_a;
+
+//         a_i = a_ip1;
+//         w_i = w_ip1;
+//     }
+//     return -3.0*result*2.004008016032064;
+// }
 /**
  * Background quantities at given redshift z.
  *
@@ -336,11 +383,7 @@ int background_at_z(
 
   /* size of output vector, controlled by input parameter return_format */
   int pvecback_size;
-
-  /* log(a) (in fact, given our normalisation conventions, this is log(a/a_0)) */
   double loga;
-
-  /** - check that log(a) = log(1/(1+z)) = -log(1+z) is in the pre-computed range */
   loga = -log(1+z);
 
   class_test(loga < pba->loga_table[0],
@@ -745,6 +788,14 @@ int background_functions(
     rho_tot += pvecback[pba->index_bg_rho_fld];
     p_tot += w_fld * pvecback[pba->index_bg_rho_fld];
     dp_dloga += (a*dw_over_da-3*(1+w_fld)*w_fld)*pvecback[pba->index_bg_rho_fld];
+
+    /* get rho_fld from vector of integrated variables */
+    pvecback[pba->index_bg_rho_fld] = pvecback_B[pba->index_bi_rho_fld];
+
+
+    /* ==> ADD THIS LINE TO PRINT THE EVOLUTION OF w(a) <== */
+    printf("W_EVOLUTION   %e   %e\n", a, w_fld);
+
   }
 
   /* relativistic neutrinos (and all relativistic relics) */
@@ -861,93 +912,45 @@ int background_w_fld(
                      double * integral_fld
                      ) {
 
-  double Omega_ede = 0.;
-  double dOmega_ede_over_da = 0.;
-  double d2Omega_ede_over_da2 = 0.;
-  double a_eq, Omega_r, Omega_m;
-
-  /** - first, define the function w(a) */
+  // This function acts as a switchboard for different models
   switch (pba->fluid_equation_of_state) {
+
   case topoDE:
+    // For your model, we call the helper function to get w(a)
     *w_fld = compute_w_de(pba, a);
-    break;
-  case CLP:
-    *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
-    break;
-  case EDE:
-    // Omega_ede(a) taken from eq. (10) in 1706.00730
-    Omega_ede = (pba->Omega0_fld - pba->Omega_EDE*(1.-pow(a,-3.*pba->w0_fld)))
-      /(pba->Omega0_fld+(1.-pba->Omega0_fld)*pow(a,3.*pba->w0_fld))
-      + pba->Omega_EDE*(1.-pow(a,-3.*pba->w0_fld));
-
-    // d Omega_ede / d a taken analytically from the above
-    dOmega_ede_over_da = - pba->Omega_EDE* 3.*pba->w0_fld*pow(a,-3.*pba->w0_fld-1.)/(pba->Omega0_fld+(1.-pba->Omega0_fld)*pow(a,3.*pba->w0_fld))
-      - (pba->Omega0_fld - pba->Omega_EDE*(1.-pow(a,-3.*pba->w0_fld)))*(1.-pba->Omega0_fld)*3.*pba->w0_fld*pow(a,3.*pba->w0_fld-1.)/pow(pba->Omega0_fld+(1.-pba->Omega0_fld)*pow(a,3.*pba->w0_fld),2)
-      + pba->Omega_EDE*3.*pba->w0_fld*pow(a,-3.*pba->w0_fld-1.);
-
-    // find a_equality (needed because EDE tracks first radiation, then matter)
-    Omega_r = pba->Omega0_g * (1. + 3.044 * 7./8.*pow(4./11.,4./3.)); // assumes LambdaCDM + eventually massive neutrinos so light that they are relativistic at equality; needs to be generalised later on.
-    Omega_m = pba->Omega0_b;
-    if (pba->has_cdm == _TRUE_) Omega_m += pba->Omega0_cdm;
-    if (pba->has_idm == _TRUE_) Omega_m += pba->Omega0_idm;
-    if (pba->has_dcdm == _TRUE_)
-      class_stop(pba->error_message,"Early Dark Energy not compatible with decaying Dark Matter because we omitted to code the calculation of a_eq in that case, but it would not be difficult to add it if necessary, should be a matter of 5 minutes");
-    a_eq = Omega_r/Omega_m; // assumes a flat universe with a=1 today
-
-    // w_ede(a) taken from eq. (11) in 1706.00730
-    *w_fld = - dOmega_ede_over_da*a/Omega_ede/3./(1.-Omega_ede)+a_eq/3./(a+a_eq);
-    break;
-  }
-
-
-  /** - then, give the corresponding analytic derivative dw/da (used
-      by perturbation equations; we could compute it numerically,
-      but with a loss of precision; as long as there is a simple
-      analytic expression of the derivative of the previous
-      function, let's use it! */
-  switch (pba->fluid_equation_of_state) {
-  case topoDE:
-    //Fotis:TODO-improve this assumption
-    double delta_a = 1e-10;
-    *dw_over_da_fld = (a < 1e-4) ? 0  : ((compute_w_de(pba, a+delta_a) - compute_w_de(pba, a))/delta_a);
-  case CLP:
-    *dw_over_da_fld = - pba->wa_fld;
-    break;
-  case EDE:
-    d2Omega_ede_over_da2 = 0.;
-    *dw_over_da_fld = - d2Omega_ede_over_da2*a/3./(1.-Omega_ede)/Omega_ede
-      - dOmega_ede_over_da/3./(1.-Omega_ede)/Omega_ede
-      + dOmega_ede_over_da*dOmega_ede_over_da*a/3./(1.-Omega_ede)/(1.-Omega_ede)/Omega_ede
-      + a_eq/3./(a+a_eq)/(a+a_eq);
-    break;
-  }
-
-  /** - finally, give the analytic solution of the following integral:
-      \f$ \int_{a}^{a0} da 3(1+w_{fld})/a \f$. This is used in only
-      one place, in the initial conditions for the background, and
-      with a=a_ini. If your w(a) does not lead to a simple analytic
-      solution of this integral, no worry: instead of writing
-      something here, the best would then be to leave it equal to
-      zero, and then in background_initial_conditions() you should
-      implement a numerical calculation of this integral only for
-      a=a_ini, using for instance Romberg integration. It should be
-      fast, simple, and accurate enough. */
-  switch (pba->fluid_equation_of_state) {
-  case topoDE:
-    //Fotis:TODO-improve this assumption
+    // and the numerical integrator to get the scaling integral
     *integral_fld = numerically_integrate_for_fld(pba, a);
-  case CLP:
-    *integral_fld = 3.*((1.+pba->w0_fld+pba->wa_fld)*log(1./a) + pba->wa_fld*(a-1.));
     break;
-  case EDE:
-    class_stop(pba->error_message,"EDE implementation not finished: to finish it, read the comments in background.c just before this line\n");
+
+  case CLP:
+    // Standard w0-wa model uses analytic formulas
+    *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
+    *integral_fld = 3. * ((1. + pba->w0_fld + pba->wa_fld) * log(1./a) + pba->wa_fld * (a - 1.));
+    break;
+
+  default:
+    // Fallback to a cosmological constant
+    *w_fld = -1.0;
+    *integral_fld = 0.0;
     break;
   }
 
-  /** note: of course you can generalise these formulas to anything,
-      defining new parameters pba->w..._fld. Just remember that so
-      far, HyRec explicitely assumes that w(a)= w0 + wa (1-a/a0); but
-      Recfast does not assume anything */
+  // Calculate derivative dw/da (numerically for safety and generality)
+  if (a > 0.) {
+    double a_plus = a * (1. + 1e-5);
+    double w_plus;
+    
+    // We need to call the correct w(a) function again for the derivative
+    switch (pba->fluid_equation_of_state) {
+      case topoDE: w_plus = compute_w_de(pba, a_plus); break;
+      case CLP: w_plus = pba->w0_fld + pba->wa_fld * (1. - a_plus); break;
+      default: w_plus = -1.0; break;
+    }
+    *dw_over_da_fld = (w_plus - *w_fld) / (a_plus - a);
+  }
+  else {
+    *dw_over_da_fld = 0.;
+  }
 
   return _SUCCESS_;
 }
@@ -1980,7 +1983,7 @@ int background_checks(
   if (pba->has_fld == _TRUE_) {
 
     class_call(background_w_fld(pba,0.,&w_fld,&dw_over_da,&integral_fld), pba->error_message, pba->error_message);
-
+    fprintf(stderr, "\n--- w_fld = %e ---\n", w_fld);
     class_test(w_fld >= 1./3.,
                pba->error_message,
                "Your choice for w(a--->0)=%g is suspicious, since it is bigger than 1/3 there cannot be radiation domination at early times\n",
@@ -2333,208 +2336,92 @@ int background_solve(
 int background_initial_conditions(
                                   struct precision *ppr,
                                   struct background *pba,
-                                  double * pvecback, /* vector with argument pvecback[index_bg] (must be already allocated, normal format is sufficient) */
-                                  double * pvecback_integration, /* vector with argument pvecback_integration[index_bi] (must be already allocated with size pba->bi_size) */
+                                  double * pvecback,
+                                  double * pvecback_integration,
                                   double * loga_ini
                                   ) {
-
-  /** Summary: */
-
-  /** - define local variables */
-
-  /* scale factor */
   double a;
-
   double rho_ncdm, p_ncdm, rho_ncdm_rel_tot=0.;
-  double f,Omega_rad, rho_rad;
-  int counter,is_early_enough,n_ncdm;
-  double scf_lambda;
-  double rho_fld_today;
+  int n_ncdm;
   double w_fld,dw_over_da_fld,integral_fld;
 
-  /** - fix initial value of \f$ a \f$ */
   a = ppr->a_ini_over_a_today_default;
 
-  /**  If we have ncdm species, perhaps we need to start earlier
-       than the standard value for the species to be relativistic.
-       This could happen for some WDM models.
-  */
-
+  // Standard logic for finding ncdm starting time
   if (pba->has_ncdm == _TRUE_) {
-
+    int counter;
+    _Bool is_early_enough;
     for (counter=0; counter < _MAX_IT_; counter++) {
-
       is_early_enough = _TRUE_;
       rho_ncdm_rel_tot = 0.;
-
       for (n_ncdm=0; n_ncdm<pba->N_ncdm; n_ncdm++) {
-
-        class_call(background_ncdm_momenta(pba->q_ncdm_bg[n_ncdm],
-                                           pba->w_ncdm_bg[n_ncdm],
-                                           pba->q_size_ncdm_bg[n_ncdm],
-                                           pba->M_ncdm[n_ncdm],
-                                           pba->factor_ncdm[n_ncdm],
-                                           1./a-1.0,
-                                           NULL,
-                                           &rho_ncdm,
-                                           &p_ncdm,
-                                           NULL,
-                                           NULL),
-                   pba->error_message,
-                   pba->error_message);
+        class_call(background_ncdm_momenta(pba->q_ncdm_bg[n_ncdm],pba->w_ncdm_bg[n_ncdm],
+                                           pba->q_size_ncdm_bg[n_ncdm],pba->M_ncdm[n_ncdm],
+                                           pba->factor_ncdm[n_ncdm],1./a-1.0,
+                                           NULL,&rho_ncdm,&p_ncdm,NULL,NULL),
+                   pba->error_message,pba->error_message);
         rho_ncdm_rel_tot += 3.*p_ncdm;
         if (fabs(p_ncdm/rho_ncdm-1./3.)>ppr->tol_ncdm_initial_w) {
           is_early_enough = _FALSE_;
         }
       }
-      if (is_early_enough == _TRUE_) {
-        break;
-      }
-      else {
-        a *= _SCALE_BACK_;
-      }
+      if (is_early_enough == _TRUE_) break;
+      else a *= _SCALE_BACK_;
     }
-    class_test(counter == _MAX_IT_,
-               pba->error_message,
-               "Search for initial scale factor a such that all ncdm species are relativistic failed.");
+    class_test(counter == _MAX_IT_,pba->error_message,"Search for initial scale factor for ncdm failed.");
   }
 
-  /* Set initial values of {B} variables: */
-  Omega_rad = pba->Omega0_g;
-  if (pba->has_ur == _TRUE_) {
-    Omega_rad += pba->Omega0_ur;
-  }
-  if (pba->has_idr == _TRUE_) {
-    Omega_rad += pba->Omega0_idr;
-  }
-  rho_rad = Omega_rad*pow(pba->H0,2)/pow(a,4);
-  if (pba->has_ncdm == _TRUE_) {
-    /** - We must add the relativistic contribution from NCDM species */
-    rho_rad += rho_ncdm_rel_tot;
-  }
-  if (pba->has_dcdm == _TRUE_) {
-    /* Remember that the critical density today in CLASS conventions is H0^2 */
-    pvecback_integration[pba->index_bi_rho_dcdm] =
-      pba->Omega_ini_dcdm*pba->H0*pba->H0*pow(a,-3);
-    if (pba->background_verbose > 3)
-      printf("Density is %g. Omega_ini=%g\n",pvecback_integration[pba->index_bi_rho_dcdm],pba->Omega_ini_dcdm);
-  }
+  // Set default initial values for integrated variables to zero
+  for(int i=0; i<pba->bi_size; ++i) pvecback_integration[i]=0.;
 
-  if (pba->has_dr == _TRUE_) {
-    if (pba->has_dcdm == _TRUE_) {
-      /**  - f is the critical density fraction of DR. The exact solution is:
-       *
-       * `f = -Omega_rad+pow(pow(Omega_rad,3./2.)+0.5*pow(a,6)*pvecback_integration[pba->index_bi_rho_dcdm]*pba->Gamma_dcdm/pow(pba->H0,3),2./3.);`
-       *
-       * but it is not numerically stable for very small f which is always the case.
-       * Instead we use the Taylor expansion of this equation, which is equivalent to
-       * ignoring f(a) in the Hubble rate.
-       */
-      f = 1./3.*pow(a,6)*pvecback_integration[pba->index_bi_rho_dcdm]*pba->Gamma_dcdm/pow(pba->H0,3)/sqrt(Omega_rad);
-      pvecback_integration[pba->index_bi_rho_dr] = f*pba->H0*pba->H0/pow(a,4);
-    }
-    else{
-      /** There is also a space reserved for a future case where dr is not sourced by dcdm */
-      pvecback_integration[pba->index_bi_rho_dr] = 0.0;
-    }
-  }
-
+  // Set initial value for the fluid
   if (pba->has_fld == _TRUE_) {
-
-    /* rho_fld today */
-    rho_fld_today = pba->Omega0_fld * pow(pba->H0,2);
-
-    /* integrate rho_fld(a) from a_ini to a_0, to get rho_fld(a_ini) given rho_fld(a0) */
     class_call(background_w_fld(pba,a,&w_fld,&dw_over_da_fld,&integral_fld), pba->error_message, pba->error_message);
-
-    /* Note: for complicated w_fld(a) functions with no simple
-       analytic integral, this is the place were you should compute
-       numerically the simple 1d integral [int_{a_ini}^{a_0} 3
-       [(1+w_fld)/a] da] (e.g. with the Romberg method?) instead of
-       calling background_w_fld */
-
-    /* rho_fld at initial time */
+    double rho_fld_today = pba->Omega0_fld * pow(pba->H0,2);
     pvecback_integration[pba->index_bi_rho_fld] = rho_fld_today * exp(integral_fld);
-
   }
 
-  /** - Fix initial value of \f$ \phi, \phi' \f$
-   * set directly in the radiation attractor => fixes the units in terms of rho_ur
-   *
-   * TODO:
-   * - There seems to be some small oscillation when it starts.
-   * - Check equations and signs. Sign of phi_prime?
-   * - is rho_ur all there is early on?
-   */
-  if (pba->has_scf == _TRUE_) {
-    scf_lambda = pba->scf_parameters[0];
-    if (pba->attractor_ic_scf == _TRUE_) {
-      pvecback_integration[pba->index_bi_phi_scf] = -1/scf_lambda*
-        log(rho_rad*4./(3*pow(scf_lambda,2)-12))*pba->phi_ini_scf;
-      if (3.*pow(scf_lambda,2)-12. < 0) {
-        /** - --> If there is no attractor solution for scf_lambda, assign some value. Otherwise would give a nan.*/
-        pvecback_integration[pba->index_bi_phi_scf] = 1./scf_lambda;//seems to do the work
-        if (pba->background_verbose > 0) {
-          printf(" No attractor IC for lambda = %.3e ! \n ",scf_lambda);
-        }
-      }
-      pvecback_integration[pba->index_bi_phi_prime_scf] = 2.*a*sqrt(V_scf(pba,pvecback_integration[pba->index_bi_phi_scf]))*pba->phi_prime_ini_scf;
-    }
-    else {
-      printf("Not using attractor initial conditions\n");
-      /** - --> If no attractor initial conditions are assigned, gets the provided ones. */
-      pvecback_integration[pba->index_bi_phi_scf] = pba->phi_ini_scf;
-      pvecback_integration[pba->index_bi_phi_prime_scf] = pba->phi_prime_ini_scf;
-    }
-    class_test(!isfinite(pvecback_integration[pba->index_bi_phi_scf]) ||
-               !isfinite(pvecback_integration[pba->index_bi_phi_scf]),
-               pba->error_message,
-               "initial phi = %e phi_prime = %e -> check initial conditions",
-               pvecback_integration[pba->index_bi_phi_scf],
-               pvecback_integration[pba->index_bi_phi_scf]);
+  // Set other initial conditions from your original file
+  if (pba->has_dcdm == _TRUE_) {
+    pvecback_integration[pba->index_bi_rho_dcdm] = pba->Omega_ini_dcdm*pba->H0*pba->H0*pow(a,-3);
   }
+   if (pba->has_scf == _TRUE_) {
+     double rho_rad_scf = (pba->Omega0_g + pba->Omega0_ur) * pow(pba->H0,2)/pow(a,4);
+     double scf_lambda = pba->scf_parameters[0];
+     if (pba->attractor_ic_scf == _TRUE_) {
+       pvecback_integration[pba->index_bi_phi_scf] = -1/scf_lambda*log(rho_rad_scf*4./(3*pow(scf_lambda,2)-12))*pba->phi_ini_scf;
+       if (3.*pow(scf_lambda,2)-12. < 0) {
+         pvecback_integration[pba->index_bi_phi_scf] = 1./scf_lambda;
+       }
+       pvecback_integration[pba->index_bi_phi_prime_scf] = 2.*a*sqrt(V_scf(pba,pvecback_integration[pba->index_bi_phi_scf]))*pba->phi_prime_ini_scf;
+     }
+     else {
+       pvecback_integration[pba->index_bi_phi_scf] = pba->phi_ini_scf;
+       pvecback_integration[pba->index_bi_phi_prime_scf] = pba->phi_prime_ini_scf;
+     }
+   }
 
-  /* Infer pvecback from pvecback_integration */
+  // Call background_functions once to fill pvecback with all derived quantities at a_ini
   class_call(background_functions(pba, a, pvecback_integration, normal_info, pvecback),
              pba->error_message,
              pba->error_message);
 
-  /* Just checking that our initial time indeed is deep enough in the radiation
-     dominated regime */
+  // Final sanity check for radiation domination
   class_test(fabs(pvecback[pba->index_bg_Omega_r]-1.) > ppr->tol_initial_Omega_r,
              pba->error_message,
-             "Omega_r = %e, not close enough to 1. Decrease a_ini_over_a_today_default in order to start from radiation domination.",
-             pvecback[pba->index_bg_Omega_r]);
+             "Omega_r = %e, not close enough to 1.", pvecback[pba->index_bg_Omega_r]);
 
-  /** - compute initial proper time, assuming radiation-dominated
-      universe since Big Bang and therefore \f$ t=1/(2H) \f$ (good
-      approximation for most purposes) */
-
-  class_test(pvecback[pba->index_bg_H] <= 0.,
-             pba->error_message,
-             "H = %e instead of strictly positive",pvecback[pba->index_bg_H]);
-
+  // Set remaining initial conditions
   pvecback_integration[pba->index_bi_time] = 1./(2.* pvecback[pba->index_bg_H]);
-
-  /** - compute initial conformal time, assuming radiation-dominated
-      universe since Big Bang and therefore \f$ \tau=1/(aH) \f$
-      (good approximation for most purposes) */
-  pvecback_integration[pba->index_bi_tau] = 1./(a * pvecback[pba->index_bg_H]);
-
-  /** - compute initial sound horizon, assuming \f$ c_s=1/\sqrt{3} \f$ initially */
-  pvecback_integration[pba->index_bi_rs] = pvecback_integration[pba->index_bi_tau]/sqrt(3.);
-
-  /** - set initial value of D and D' in RD. D and D' need only be set up to an overall constant, since they will later be re-normalized. From Ma&Bertschinger, one can derive D ~ (ktau)^2 at early times, from which one finds D'/D = 2 aH (assuming aH=1/tau during RD) */
   pvecback_integration[pba->index_bi_D] = 1.;
   pvecback_integration[pba->index_bi_D_prime] = 2.*a*pvecback[pba->index_bg_H];
+  pvecback_integration[pba->index_bi_tau] = 1./(a * pvecback[pba->index_bg_H]);
+  pvecback_integration[pba->index_bi_rs] = pvecback_integration[pba->index_bi_tau]/sqrt(3.);
 
-  /** - return the value finally chosen for the initial log(a) */
   *loga_ini = log(a);
 
   return _SUCCESS_;
-
 }
-
 /**
  * Find the time of radiation/matter equality and store characteristic
  * quantitites at that time in the background structure..
