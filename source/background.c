@@ -182,35 +182,76 @@ static double d_omegaDE_da(double a, double Omega_Lambda_eff, void * params) {
     double H0_in_GeV = 6.582 * 100 * h / 3.086 * 1e-44;
     const double G = 1.0;
 
-    if (a < 1e-4){
+    if (a < 1e-2){
         return 0.0;
     }
     double H0 = H0_in_GeV;
-    // double a2 = a * a;
-    // double a5 = a2 * a2 * a;
 
-    // double big1 = (Omega_r0 + Omega_m0*a + Omega_k0*a2) / a2;
-    // double big2 = (4.*Omega_r0 + 3.*Omega_m0*a + 2.*Omega_k0*a2) / a2;
-    // double big3 = (2.*Omega_r0 + 2.*Omega_m0*a + Omega_k0*a2) / a2;
-
-    // double term1 = -4.0 * pow(H0_in_GeV, 2) * big1 * big2 / a5;
-    // double term2 = ((-1.0 + Omega_Lambda_eff) * (Omega_m0/a - 2.0 * big3 * Omega_Lambda_eff)) / G;
-    // double num = G * (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff * (term1 + term2);
-    // double den = ( (1./a) * big1 * (4.0 * G * pow(H0_in_GeV, 2) * big1 / a5 + (-1.0 + Omega_Lambda_eff) * Omega_Lambda_eff) );
+    // return (G*pow(-1+Omega_Lambda_eff,2)*Omega_Lambda_eff*((-4*pow(H0,2)*(2*pow(a,2)*Omega_k0+3*a*Omega_m0+4*Omega_r0))/(-1+Omega_Lambda_eff)+(pow(a,7)*(a*Omega_m0-2*(pow(a,2)*Omega_k0+2*a*Omega_m0+2*Omega_r0)*Omega_Lambda_eff))/(G*(a*(a*Omega_k0+Omega_m0)+Omega_r0))))/(4*a*G*pow(H0,2)*(a*(a*Omega_k0+Omega_m0)+Omega_r0)+pow(a,8)*(-1+Omega_Lambda_eff)*Omega_Lambda_eff);
 
 
-    // double derivative = (a2 * num) / den;
+    /***************************************************************************************
+     * 
+     *             DEBUGGING
+     * 
+     * 
+     * **************************************************************************************/
 
-    // if (!isfinite(derivative)) {
-    //     fprintf(stderr, "\n--- NaN DETECTED inside d_omegaDE_da at a = %e ---\n", a);
-    //     fprintf(stderr, "  INPUTS: Omega_Lambda_eff = %g\n", Omega_Lambda_eff);
-    //     fprintf(stderr, "  FINAL: num=%g, den=%g\n", num, den);
-    //     fprintf(stderr, "---------------------------------\n");
-    // }
 
-    // return derivative;
-    return (G*pow(-1+Omega_Lambda_eff,2)*Omega_Lambda_eff*((-4*pow(H0,2)*(2*pow(a,2)*Omega_k0+3*a*Omega_m0+4*Omega_r0))/(-1+Omega_Lambda_eff)+(pow(a,7)*(a*Omega_m0-2*(pow(a,2)*Omega_k0+2*a*Omega_m0+2*Omega_r0)*Omega_Lambda_eff))/(G*(a*(a*Omega_k0+Omega_m0)+Omega_r0))))/(4*a*G*pow(H0,2)*(a*(a*Omega_k0+Omega_m0)+Omega_r0)+pow(a,8)*(-1+Omega_Lambda_eff)*Omega_Lambda_eff);
+     // Pre-calculate frequently used terms
+    double a2 = a * a;
+    double a7 = a*a*a*a*a*a*a;
+    double a8 = a7 * a;
+    
+    // Denominator of the entire expression
+    double den_main = (4.*a*G*pow(H0,2)*(a*(a*Omega_k0+Omega_m0)+Omega_r0)+a8*(-1.+Omega_Lambda_eff)*Omega_Lambda_eff);
 
+    // Check for division-by-zero for the main denominator
+    if (fabs(den_main) < 1e-40) {
+        if (pba->background_verbose > 1) {
+          fprintf(stderr, "\nWARNING: Main denominator in d_omegaDE_da is zero at a=%e\n", a);
+        }
+        return 0.0; // Return a safe value
+    }
+
+    // Numerator Term 1 (related to H0^2)
+    // There is a division by (-1 + Omega_Lambda_eff) here which is dangerous if Omega_Lambda_eff ~ 1
+    double num_term1_factor = -1. + Omega_Lambda_eff;
+    if (fabs(num_term1_factor) < 1e-9) { // Check for singularity
+        if (pba->background_verbose > 1) {
+          fprintf(stderr, "\nWARNING: Denominator in num_term1 is zero at a=%e\n", a);
+        }
+        return 0.0;
+    }
+    double num_term1 = (-4.*pow(H0,2)*(2.*a2*Omega_k0+3.*a*Omega_m0+4.*Omega_r0))/num_term1_factor;
+
+    // Numerator Term 2 (related to a^7)
+    double num_term2_den = (G*(a*(a*Omega_k0+Omega_m0)+Omega_r0));
+    if (fabs(num_term2_den) < 1e-40) {
+        if (pba->background_verbose > 1) {
+          fprintf(stderr, "\nWARNING: Denominator in num_term2 is zero at a=%e\n", a);
+        }
+        return 0.0;
+    }
+    double num_term2 = (a7*(a*Omega_m0-2.*(a2*Omega_k0+2.*a*Omega_m0+2.*Omega_r0)*Omega_Lambda_eff))/num_term2_den;
+    
+    // Full Numerator
+    double num_main = G*pow(-1.+Omega_Lambda_eff,2)*Omega_Lambda_eff*(num_term1 + num_term2);
+    
+    double derivative = num_main / den_main;
+
+    // Final check for NaN or infinity, which indicates a serious numerical error
+    if (!isfinite(derivative)) {
+        if (pba->background_verbose > 0) {
+          fprintf(stderr, "\n--- NaN/inf DETECTED inside d_omegaDE_da at a = %e ---\n", a);
+          fprintf(stderr, "  INPUTS: Omega_Lambda_eff = %g\n", Omega_Lambda_eff);
+          fprintf(stderr, "  TERMS: num_main=%g, den_main=%g, num_term1=%g, num_term2=%g\n", num_main, den_main, num_term1, num_term2);
+          fprintf(stderr, "---------------------------------\n");
+        }
+        return 0.0; // Return a safe value to allow the code to continue
+    }
+
+    return derivative;
 }
 
 /**
@@ -263,49 +304,170 @@ static double rk45_solver(
 /**
  * Computes the dark energy equation of state w_de at a given scale factor.
  */
-static double compute_w_de(struct background * pba, double a_current) {
+// static double compute_w_de(struct background * pba, double a_current) {
     
-    // return -1.0;
+//     // return -1.0;
 
     
-    // ONCE THE TEST ABOVE WORKS, YOU CAN UNCOMMENT YOUR FULL MODEL BELOW TO DEBUG IT.
+//     // ONCE THE TEST ABOVE WORKS, YOU CAN UNCOMMENT YOUR FULL MODEL BELOW TO DEBUG IT.
 
-    if (a_current < 1e-3) {
-        return -0.00000001;
-    }
+//     if (a_current < 1e-2) {
+//         return -0.00000001;
+//     }
 
+//     double tol = 1e-4;
+//     double h_init = -1e-3;
+//     double a0 = 1.0;
+//     double Omega_DE_0 = pba->Omega0_fld;
+
+//     double omega_de_at_a = rk45_solver(d_omegaDE_da, a0, Omega_DE_0, a_current, (void *)pba, tol, h_init);
+//     double dOmega_da = d_omegaDE_da(a_current, omega_de_at_a, (void *)pba);
+
+//     double Omega_k0 = pba->Omega0_k;
+//     double Omega_r0 = pba->Omega0_g + pba->Omega0_ur;
+//     double Omega_m0 = pba->Omega0_b + pba->Omega0_cdm;
+
+//     double w_denominator = ((-1.0 + omega_de_at_a) * omega_de_at_a);
+
+
+//     double w_numerator = (-(pow(a_current,2)*Omega_k0)+Omega_r0)/(a_current*(a_current*Omega_k0+Omega_m0)+Omega_r0) + (a_current*dOmega_da)/w_denominator;
+    
+//     return w_numerator/3.0;
+// }
+/**
+ * A smooth switching function (logistic function) that transitions from 0 to 1.
+ *
+ * @param a The current scale factor.
+ * @param a_center The scale factor at the center of the transition.
+ * @param transition_steepness Controls how sharp the transition is. Higher is sharper.
+ */
+static double smooth_switch(double a, double a_center, double transition_steepness) {
+    // We use log(a) to make the transition scale-independent.
+    double x = (log(a) - log(a_center)) * transition_steepness;
+
+    // These checks prevent numerical overflow in the exp() function.
+    if (x < -30.0) return 0.0;
+    if (x > 30.0) return 1.0;
+    
+    return 1.0 / (1.0 + exp(-x));
+}
+static double compute_w_de_full_numerical(struct background * pba, double a_current) {
     double tol = 1e-6;
     double h_init = -1e-5;
     double a0 = 1.0;
     double Omega_DE_0 = pba->Omega0_fld;
 
+    // Call the RK solver to get Omega_DE at the current 'a'
     double omega_de_at_a = rk45_solver(d_omegaDE_da, a0, Omega_DE_0, a_current, (void *)pba, tol, h_init);
+    
+    // Get the derivative at that point
     double dOmega_da = d_omegaDE_da(a_current, omega_de_at_a, (void *)pba);
 
+    // Calculate w from the rearranged Friedmann/conservation equation
     double Omega_k0 = pba->Omega0_k;
-    double Omega_r0 = pba->Omega0_g + pba->Omega0_ur;
+    double Omega_r0 = pba->Omega0_g;
+    if(pba->has_ur) Omega_r0 += pba->Omega0_ur;
     double Omega_m0 = pba->Omega0_b + pba->Omega0_cdm;
 
     double w_denominator = ((-1.0 + omega_de_at_a) * omega_de_at_a);
 
+    // Check for division by zero
+    if (fabs(w_denominator) < 1e-40) {
+        if (pba->background_verbose > 1) {
+          fprintf(stderr, "WARNING: w_denominator in full_numerical is zero at a=%e\n", a_current);
+        }
+        return 0.0; // Return a safe value
+    }
 
     double w_numerator = (-(pow(a_current,2)*Omega_k0)+Omega_r0)/(a_current*(a_current*Omega_k0+Omega_m0)+Omega_r0) + (a_current*dOmega_da)/w_denominator;
     
     return w_numerator/3.0;
 }
+static double compute_w_de(struct background * pba, double a_current) {
     
-static double numerically_integrate_for_fld(struct background *pba, double a_start) {
-    // Safety check for the a=0 edge case
-    if (a_start < 1e-3) {
-        return -100000;
+    // --- Tunable Parameters for the Switch ---
+    // The center of the transition period (a=1e-3 corresponds to z=999)
+    const double a_center = 1e-3;
+    // How sharp the transition is. Good values are typically between 5 and 15.
+    const double transition_steepness = 10.0;
+    // -----------------------------------------
+
+    // 1. Calculate the blending factor (from 0 to 1)
+    double f_switch = smooth_switch(a_current, a_center, transition_steepness);
+
+    // 2. Define the high-redshift behavior (w -> 0)
+    // This is what your original hard cutoff did.
+    double w_high_z = -1.0e-8;
+
+    // 3. OPTIMIZATION: If the switch is almost completely "off" (f_switch is tiny),
+    // don't bother running the expensive numerical calculation.
+    if (f_switch < 1.0e-6) {
+        return w_high_z;
     }
 
-    double a_end = 1.0;
-    double epsilon = 0.1e-6; // Precision of the integrator
+    // 4. Calculate the low-redshift behavior using the full numerical solution.
+    double w_low_z = compute_w_de_full_numerical(pba, a_current);
 
-    double whole = simpson_step(pba, a_start, a_end);
-    return adaptive_simpson_recursive(pba, a_start, a_end, epsilon, whole, 0);
+    // 5. Blend the two behaviors together and return the final w.
+    return (1.0 - f_switch) * w_high_z + f_switch * w_low_z;
 }
+// static double numerically_integrate_for_fld(struct background *pba, double a_start) {
+//     // Safety check for the a=0 edge case
+//     if (a_start < 1e-3) {
+//         return -100000;
+//     }
+
+//     double a_end = 1.0;
+//     double epsilon = 0.1e-6; // Precision of the integrator
+
+//     double whole = simpson_step(pba, a_start, a_end);
+//     return adaptive_simpson_recursive(pba, a_start, a_end, epsilon, whole, 0);
+// }
+
+static double numerically_integrate_for_fld(struct background *pba, double a_start) {
+    
+    // This function is called once at the beginning, so we can afford a
+    // direct, simple numerical integration.
+    // We use a simple log-spaced trapezoidal rule.
+    
+    int n_steps = 1000; // Number of steps for the integration
+    double a_end = 1.0;
+    double log_a_start = log(a_start+1e-10);
+    double log_a_end = log(a_end);
+    double d_log_a = (log_a_end - log_a_start) / (double)n_steps;
+    
+    double integral_sum = 0.0;
+    double a_i, w_i;
+
+    // Calculate the integrand at the first point
+    w_i = compute_w_de(pba, a_start);
+    double integrand_last = 3.0 * (1.0 + w_i); // Integrand is d(rho)/d(lna) / (-rho)
+    
+    for (int i = 1; i <= n_steps; ++i) {
+        a_i = exp(log_a_start + i * d_log_a);
+        w_i = compute_w_de(pba, a_i);
+        double integrand_current = 3.0 * (1.0 + w_i);
+        
+        // Add the area of the trapezoid for this step
+        integral_sum += 0.5 * (integrand_last + integrand_current) * d_log_a;
+        
+        integrand_last = integrand_current;
+    }
+
+    // The integral in the formula is -int[...], so we return the negative.
+    // Note: The original formula is exp(-integral), so we need the positive value here.
+    // The formula in CLASS is rho_fld_ini = rho_fld_today * exp(integral_fld)
+    // where integral_fld = int_{a_ini}^{a_0} da 3(1+w)/a = int_{lna_ini}^{0} dlna 3(1+w).
+    // The integral we calculated is from lna_ini to 0, which is what we need.
+    // So we should return -integral_sum if the integral definition has a minus sign.
+    // Let's check background_initial_conditions: rho_fld_today * exp(integral_fld)
+    // and integral_fld = 3.*((1.+pba->w0_fld...)*log(1./a) ...). So log(1/a) is positive.
+    // Our loop goes from a_start to 1, so d_log_a is positive. The sum is positive.
+    // The CLP example returns a positive value for a<1. So we should return our positive sum.
+    return -integral_sum;
+}
+
+
 /**
  * Background quantities at given redshift z.
  *
@@ -870,6 +1032,9 @@ int background_w_fld(
   switch (pba->fluid_equation_of_state) {
   case topoDE:
     *w_fld = compute_w_de(pba, a);
+    // if (pba->background_verbose > 4) {
+    //   printf("w_debug %e %e\n", a, *w_fld);
+    // }
     break;
   case CLP:
     *w_fld = pba->w0_fld + pba->wa_fld * (1. - a);
@@ -909,7 +1074,7 @@ int background_w_fld(
   case topoDE:
     //Fotis:TODO-improve this assumption
     double delta_a = 1e-10;
-    *dw_over_da_fld = (a < 1e-4) ? 0  : ((compute_w_de(pba, a+delta_a) - compute_w_de(pba, a))/delta_a);
+    *dw_over_da_fld = (a < 1e-2) ? 0  : ((compute_w_de(pba, a+delta_a) - compute_w_de(pba, a))/delta_a);
   case CLP:
     *dw_over_da_fld = - pba->wa_fld;
     break;

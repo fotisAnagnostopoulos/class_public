@@ -3306,7 +3306,7 @@ int input_read_parameters_species(struct file_content * pfc,
       /* Read */
       // class_read_double("w0_fld",pba->w0_fld);
       // class_read_double("Omega_EDE",pba->Omega_EDE);
-      // class_read_double("cs2_fld",pba->cs2_fld);
+      class_read_double("cs2_fld",pba->cs2_fld);
     }
   }
 
